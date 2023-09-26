@@ -12,6 +12,7 @@ from fastapi.middleware.cors import (
 origins = [
     "http://localhost",
     "http://localhost:5174",
+    "http://localhost:5173",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +21,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/filmes")
+async def filmes_populares(limit=3):
+    """ Obtem os filmes mais populares usando endpoint discover """
+    data = get_json(
+        "https://api.themoviedb.org/3/discover/movie", "?sort_by=vote_count.desc"
+    )
+    results = data['results']
+    filtro = []
+    for movie in results:
+        filtro.append({
+            "title": movie['original_title'],
+            "image": f"https://image.tmdb.org/t/p/w185{movie['poster_path']}",
+            })    
+    return filtro
+
+
 
 
 @app.get("/filme/{title}")
@@ -64,8 +82,6 @@ async def get_movies_artist(artistId: int):
 
     
 
-
-
 @app.get("/artista/{name}")
 async def get_artista(name: str):
     data = get_json(
@@ -82,6 +98,23 @@ async def get_artista(name: str):
         })
     filtro.sort(reverse=True,key=lambda artist: artist['rank'])
     return filtro
+
+
+@app.get("/ator/{id}")
+def get_artist_by_id(id: int):
+    data = get_json(
+        "https://api.themoviedb.org/3/person/",
+        f"{id}?"
+        )
+    artista = {
+        'name': data['name'],
+        'biografia': data['biography'],
+        'imagem': f"https://image.tmdb.org/t/p/w185{data['profile_path']}"
+    }
+
+    return artista
+    
+
 
 
 
